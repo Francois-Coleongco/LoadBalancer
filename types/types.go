@@ -20,9 +20,19 @@ func (n *Node) Available() bool {
 }
 
 type Servers struct {
-	size  uint32
-	nodes map[string]*Node // map string to node so easy lookup for deletion
-	first *Node            // could use first to add new nodes
+	Size  uint32
+	Nodes map[string]*Node // map string to node so easy lookup for deletion
+	First *Node            // could use first to add new nodes
+}
+
+func InitServers() *Servers {
+	s := new(Servers)
+
+	s.Size = 0
+	s.Nodes = make(map[string]*Node)
+	s.First = nil
+
+	return s
 }
 
 func (s *Servers) AddToFront(url string, port uint16) {
@@ -31,26 +41,26 @@ func (s *Servers) AddToFront(url string, port uint16) {
 	n.url = url
 	n.port = port
 
-	if s.size == 0 {
+	if s.Size == 0 {
 		n.prev = n
 		n.next = n
 	}
 
-	n.prev = s.first.prev
-	n.next = s.first
-	s.first.prev = n
+	n.prev = s.First.prev
+	n.next = s.First
+	s.First.prev = n
 
 	whole := url + strconv.Itoa(int(port))
 
-	s.nodes[whole] = n
+	s.Nodes[whole] = n
 
-	s.size++
+	s.Size++
 }
 
 func (s *Servers) DeleteNode(url string, port uint16) {
 	whole := url + strconv.Itoa(int(port))
 
-	value, ok := s.nodes[whole]
+	value, ok := s.Nodes[whole]
 
 	if !ok {
 		fmt.Println("could not remove server", value.url, value.port)

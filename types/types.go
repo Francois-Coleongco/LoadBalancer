@@ -1,16 +1,17 @@
 package types
 
 import (
-	"fmt"
+	"log"
 	"strconv"
+	"sync"
 )
 
 type Node struct {
 	prev *Node
 	next *Node
 
-	url  string
-	port uint16
+	URL  string
+	PORT uint16
 
 	alive bool
 }
@@ -20,12 +21,14 @@ func (n *Node) Available() bool {
 }
 
 type Servers struct {
+	mu    sync.RWMutex
 	Size  uint32
 	Nodes map[string]*Node // map string to node so easy lookup for deletion
 	First *Node            // could use first to add new nodes
 }
 
 func InitServers() *Servers {
+	// will block and doesn't need locking
 	s := new(Servers)
 
 	s.Size = 0
@@ -37,9 +40,12 @@ func InitServers() *Servers {
 
 func (s *Servers) AddToFront(url string, port uint16) {
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	n := new(Node)
-	n.url = url
-	n.port = port
+	n.URL = url
+	n.PORT = port
 
 	if s.Size == 0 {
 		n.prev = n
@@ -61,14 +67,18 @@ func (s *Servers) AddToFront(url string, port uint16) {
 }
 
 func (s *Servers) DeleteNode(url string, port uint16) {
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	whole := url + strconv.Itoa(int(port))
 
 	value, ok := s.Nodes[whole]
 
-	fmt.Println("removing server: ", url, port)
+	log.Println("removing server: ", url, port)
 
 	if !ok {
-		fmt.Println("could not remove server", value.url, value.port)
+		log.Println("could not remove server", value.URL, value.PORT)
 		return
 	}
 
@@ -83,6 +93,9 @@ func (s *Servers) DeleteNode(url string, port uint16) {
 }
 
 func (s *Servers) TraverseMNodes(m uint32) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	if m == 0 { // 0 passes means you can't even iterate one server
 		m = s.Size
 	}
@@ -90,8 +103,16 @@ func (s *Servers) TraverseMNodes(m uint32) {
 	curr_node := s.First
 
 	for i := uint32(0); i < m; i++ {
-		println(curr_node.url, curr_node.port)
+		println(curr_node.URL, curr_node.PORT)
 		curr_node = curr_node.prev
 	}
 
+}
+
+func (s *Servers) GetServer() *Node {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.First
 }

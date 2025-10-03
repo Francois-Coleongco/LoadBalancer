@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	// "net/http/httputil"
-	// "net/url"
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+
 	"os"
 	"strconv"
 	"strings"
@@ -24,7 +27,7 @@ func main() {
 	file, err := os.Open(*file_name)
 
 	if err != nil {
-		fmt.Println("error opening file with name: ", *file_name)
+		log.Println("error opening file with name: ", *file_name)
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -35,7 +38,7 @@ func main() {
 		read_in_port, err := strconv.ParseInt(read_in_server[1], 10, 16)
 
 		if err != nil {
-			fmt.Println("could not parse port of server: ", read_in_server)
+			log.Println("could not parse port of server: ", read_in_server)
 			continue
 		}
 
@@ -43,7 +46,7 @@ func main() {
 	}
 
 	if s.Size == 0 {
-		fmt.Println("no servers read in :( how can we possibly balance now! NOOOOOOOOO")
+		log.Println("no servers read in :( how can we possibly balance now! NOOOOOOOOO")
 		return
 	}
 
@@ -53,8 +56,25 @@ func main() {
 	// every time the user sends a request, the user will have their session info (specific to the backend whatever it may be) stored in a Redis instance.
 	// if the load balancer decides it is optimal, they may pipe a subsequent request by this user to another server safely as the session data is stored in redis, not local to a backend server
 
-	// u := new(url.URL)
+	proxy := httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			server := s.GetServer()
+			target := server.URL + ":" + strconv.Itoa(int(server.PORT))
+			u, _ := url.Parse(target)
+			req.URL.Scheme = u.Scheme
+			req.URL.Host = u.Host
+		},
 
-	// httputil.NewSingleHostReverseProxy()
+		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
+			log.Println("Proxy Error: %v", err)
+			http.Error(w, "Backend unavailable", http.StatusBadGateway)
+		},
+	}
+
+	lb_port := 8080
+
+	log.Println("Starting proxy")
+
+	http.ListenAndServe(":"+string(lb_port), &proxy)
 
 }

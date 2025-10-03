@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -18,7 +17,13 @@ import (
 
 func main() {
 
-	var file_name *string = flag.String("-f", "", "please enter your server file after the -f")
+	var file_name *string = flag.String("f", "", "please enter your server file after the -f")
+
+	var lb_port *int = flag.Int("p", 6969, "please enter a valid port 0-65535")
+
+	if *lb_port < 0 || 65535 < *lb_port {
+		log.Println("please provide a valid port 0-65535")
+	}
 
 	flag.Parse()
 
@@ -34,15 +39,16 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		read_in_server := strings.Split(line, ":")
-		read_in_port, err := strconv.ParseInt(read_in_server[1], 10, 16)
+		colon_location := strings.LastIndex(line, ":")
+		read_in_server := line[:colon_location]
+		read_in_port, err := strconv.ParseInt(line[colon_location+1:], 10, 16) // plus one cuz colon is included
 
 		if err != nil {
 			log.Println("could not parse port of server: ", read_in_server)
 			continue
 		}
 
-		s.AddToFront(read_in_server[0], uint16(read_in_port))
+		s.AddToFront(read_in_server, uint16(read_in_port))
 	}
 
 	if s.Size == 0 {
@@ -66,15 +72,13 @@ func main() {
 		},
 
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
-			log.Println("Proxy Error: %v", err)
+			log.Printf("Proxy Error: %v\n", err)
 			http.Error(w, "Backend unavailable", http.StatusBadGateway)
 		},
 	}
 
-	lb_port := 8080
-
 	log.Println("Starting proxy")
 
-	http.ListenAndServe(":"+string(lb_port), &proxy)
+	http.ListenAndServe(":"+strconv.Itoa(*lb_port), &proxy)
 
 }

@@ -59,10 +59,11 @@ func (s *Servers) AddToFront(url string, port uint16) {
 		n.prev = old_prev
 	}
 
-	whole := url + strconv.Itoa(int(port))
+	whole := url + ":" + strconv.Itoa(int(port))
 
 	s.Nodes[whole] = n
 
+	log.Println("added server: ", whole)
 	s.Size++
 }
 

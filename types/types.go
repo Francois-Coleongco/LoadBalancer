@@ -44,11 +44,14 @@ func (s *Servers) AddToFront(url string, port uint16) {
 	if s.Size == 0 {
 		n.prev = n
 		n.next = n
+		s.First = n
+	} else {
+		old_prev := s.First.prev
+		s.First.prev = n
+		n.next = s.First
+		old_prev.next = n
+		n.prev = old_prev
 	}
-
-	n.prev = s.First.prev
-	n.next = s.First
-	s.First.prev = n
 
 	whole := url + strconv.Itoa(int(port))
 
@@ -62,6 +65,8 @@ func (s *Servers) DeleteNode(url string, port uint16) {
 
 	value, ok := s.Nodes[whole]
 
+	fmt.Println("removing server: ", url, port)
+
 	if !ok {
 		fmt.Println("could not remove server", value.url, value.port)
 		return
@@ -69,4 +74,24 @@ func (s *Servers) DeleteNode(url string, port uint16) {
 
 	value.prev.next = value.next
 	value.next.prev = value.prev
+
+	delete(s.Nodes, whole)
+
+	if value == s.First {
+		s.First = s.First.next
+	}
+}
+
+func (s *Servers) TraverseMNodes(m uint32) {
+	if m == 0 { // 0 passes means you can't even iterate one server
+		m = s.Size
+	}
+
+	curr_node := s.First
+
+	for i := uint32(0); i < m; i++ {
+		println(curr_node.url, curr_node.port)
+		curr_node = curr_node.prev
+	}
+
 }

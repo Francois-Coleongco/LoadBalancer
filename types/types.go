@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"sync"
@@ -12,6 +13,8 @@ type Node struct {
 
 	URL  string
 	PORT uint16
+
+	TotalConnections uint32
 
 	alive bool
 }
@@ -72,25 +75,31 @@ func (s *Servers) DeleteNode(url string, port uint16) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	whole := url + strconv.Itoa(int(port))
+	whole := url + ":" + strconv.Itoa(int(port))
 
 	value, ok := s.Nodes[whole]
 
-	log.Println("removing server: ", url, port)
+	log.Println("removing server: ", url, port, whole)
 
 	if !ok {
-		log.Println("could not remove server", value.URL, value.PORT)
+		log.Println("could not remove server", url, port)
 		return
 	}
-
-	value.prev.next = value.next
-	value.next.prev = value.prev
-
-	delete(s.Nodes, whole)
 
 	if value == s.First {
 		s.First = s.First.next
 	}
+
+	if s.Size > 1 {
+		value.prev.next = value.next
+		value.next.prev = value.prev
+	} else {
+		s.First = nil
+	}
+
+	delete(s.Nodes, whole)
+
+	s.Size--
 }
 
 func (s *Servers) TraverseMNodes(m uint32) {
@@ -99,6 +108,10 @@ func (s *Servers) TraverseMNodes(m uint32) {
 
 	if m == 0 { // 0 passes means you can't even iterate one server
 		m = s.Size
+	}
+
+	if s.Size == 0 {
+		return
 	}
 
 	curr_node := s.First
@@ -110,10 +123,20 @@ func (s *Servers) TraverseMNodes(m uint32) {
 
 }
 
-func (s *Servers) GetServer() *Node {
+func (s *Servers) GetServer() (*Node, error) {
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return s.First
+	if s.Size == 0 { // no servers in list
+		return nil, fmt.Errorf("Server retrieved was nil")
+	}
+
+	for s.First.Available() == false {
+		s.DeleteNode(s.First.URL, s.First.PORT)
+	}
+
+	s.First = s.First.next
+
+	return s.First, nil
 }

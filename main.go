@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto"
+	"encoding/hex"
 	"flag"
 	"log"
 	"net/http"
@@ -58,11 +60,30 @@ func main() {
 
 	proxy := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			server := s.GetServer()
+			server, err := s.GetServer()
+			if err != nil {
+				// only reason for GetServer to not work is if there are no servers
+				return
+			}
 			target := server.URL + ":" + strconv.Itoa(int(server.PORT))
 			u, _ := url.Parse(target)
 			req.URL.Scheme = u.Scheme
 			req.URL.Host = u.Host
+			// use current time + ip addr as hash information
+			addr_plus_port := req.RemoteAddr
+			h := crypto.SHA256.New()
+			h.Write([]byte(addr_plus_port))
+			hash := hex.EncodeToString(h.Sum(nil))
+
+			tracking := &http.Cookie{
+				HttpOnly: true,
+				Name:     "LB_Tracker",
+				Value:    hash,
+			}
+
+			// save cookie value for session in redis
+
+			req.AddCookie(tracking)
 		},
 
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {

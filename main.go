@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"time"
 
 	"os"
 	"strconv"
@@ -69,10 +70,16 @@ func main() {
 			u, _ := url.Parse(target)
 			req.URL.Scheme = u.Scheme
 			req.URL.Host = u.Host
+
+		},
+
+		ModifyResponse: func(resp *http.Response) error {
+
 			// use current time + ip addr as hash information
-			addr_plus_port := req.RemoteAddr
+			currTime := time.Now().UTC().String()
+			addrPortTime := resp.Request.RemoteAddr + currTime
 			h := crypto.SHA256.New()
-			h.Write([]byte(addr_plus_port))
+			h.Write([]byte(addrPortTime))
 			hash := hex.EncodeToString(h.Sum(nil))
 
 			tracking := &http.Cookie{
@@ -81,9 +88,12 @@ func main() {
 				Value:    hash,
 			}
 
+			resp.Header.Add("Set-Cookie", tracking.String())
 			// save cookie value for session in redis
+			// should store the LB_Tracker as key and session data as value AS WELL AS the current time to track time of last request to determine a dead or alive connection
 
-			req.AddCookie(tracking)
+			return nil
+
 		},
 
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {

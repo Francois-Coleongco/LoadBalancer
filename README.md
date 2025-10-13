@@ -2,6 +2,12 @@
 
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation**.
 
+Server Rotation Demo:
+
+https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
+
+
+
 ## ✅ Feature Checklist
 
 - ✅ **Systems-level concurrency control**

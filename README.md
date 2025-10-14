@@ -14,7 +14,7 @@ https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
 - ✅ **Custom data structures (doubly circular linked list round-robin for server scheduling)**
 - ✅ **Cookie-based load balancing strategy**
 - ✅ **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
-- ✅ **Redis-backed distributed session storage** (in progress)
+- ❌ **Redis-backed distributed session storage** (in progress)
 
 ---
 

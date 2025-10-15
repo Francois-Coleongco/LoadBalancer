@@ -1,22 +1,37 @@
-# THE PLAN
+# 🚦 Thread-Safe HTTP Load Balancer
 
-```
+A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation**.
 
-[✔] doubly linked list round robin to store servers
+Server Rotation Demo:
 
-[✔] start the http proxy
+https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
 
-[✔] read in new requests passing off to servers based on an injected load balancing session cookie for backend agnosticism
 
-[✔] set this cookie in the response then the client will send it every time automatically. then just route using that cookie
 
-every time the user sends a request, the user will have their session info (specific to the backend whatever it may be) stored in a Redis instance.
+## ✅ Feature Checklist
 
-if the load balancer decides it is optimal, they may pipe a subsequent request by this user to another server safely as the session data is stored in redis, not local to a backend server
+- ✅ **Systems-level concurrency control**
+- ✅ **Custom data structures (doubly circular linked list round-robin for server scheduling)**
+- ✅ **Cookie-based load balancing strategy**
+- ✅ **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
+- ❌ **Redis-backed distributed session storage** (in progress)
 
-start redis in a docker container btw
+---
 
-need to track inactivity to delete a session from the redis store
-```
+## 🧠 Design Overview
 
+### Load Balancing Strategy
+
+| Component | Purpose |
+|-----------|---------|
+| **Doubly Circular Linked List (Round Robin)** | Maintains the active server pool. Each request rotates through nodes in a lock-safe manner. |
+| **Injected Session Cookie** | The first response assigns a backend ID to the client. Subsequent requests can be routed to any backend server as the redis allows for agnosticism. |
+| **Redis Session Store** | Holds all user session data centrally so backends remain stateless and interchangeable. |
+| **Thread-Safety Guarantees** | The server list is stress-tested under concurrency to ensure no race conditions  |
+
+---
+
+## Deployment
+
+Coming Soon
 

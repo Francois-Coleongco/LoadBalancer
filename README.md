@@ -1,11 +1,12 @@
 # 🚦 Thread-Safe HTTP Load Balancer
 
+<img width="2387" height="939" alt="system_design_diagram" src="https://github.com/user-attachments/assets/f8e3d989-c0ac-4eb9-85c7-5ad2778581a2" />
+
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation**.
 
 Server Rotation + Redis HTTP Header Storage Demo:
 
-https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
-
+https://github.com/user-attachments/assets/a90ebaea-c2db-4007-9751-1439ab60e0de
 
 
 ## ✅ Feature Checklist

@@ -10,13 +10,13 @@ https://github.com/user-attachments/assets/a90ebaea-c2db-4007-9751-1439ab60e0de
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation** for distributed systems.
 
 
-## ✅ Feature Checklist
+## Feature Checklist
 
-- ✅ **Systems-level concurrency control**
-- ✅ **Custom data structures (doubly circular linked list round-robin for server scheduling)**
-- ✅ **Cookie-based load balancing strategy**
-- ✅ **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
-- ✅ **Redis-backed session storage**
+- **Systems-level concurrency control**
+- **Custom data structures (doubly circular linked list round-robin for server scheduling)**
+- **Cookie-based load balancing strategy**
+- **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
+- **Redis-backed session storage**
 
 ---
 

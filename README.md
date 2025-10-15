@@ -2,7 +2,7 @@
 
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation**.
 
-Server Rotation Demo:
+Server Rotation + Redis HTTP Header Storage Demo:
 
 https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
 
@@ -14,7 +14,7 @@ https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
 - ✅ **Custom data structures (doubly circular linked list round-robin for server scheduling)**
 - ✅ **Cookie-based load balancing strategy**
 - ✅ **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
-- ❌ **Redis-backed distributed session storage** (in progress)
+- ✅ **Redis-backed distributed session storage**
 
 ---
 
@@ -31,7 +31,42 @@ https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
 
 ---
 
-## Deployment
+## Environment Configuration & Building
 
-Coming Soon
+### Server File:
 
+setup your ports like so in a file:
+
+🔧 `servers.txt`
+
+```
+http://localhost:8000
+http://localhost:8001
+http://localhost:8080
+http://localhost:8081
+http://localhost:5000
+http://localhost:3000
+http://localhost:8888
+http://localhost:5173
+```
+
+## Usage
+
+
+Start the Redis store:
+
+```docker run -d -p 6379:6379 --name lb_redis_store redis```
+
+The load balancer takes the following flags:
+
+-f servers.txt
+-p loadBalancerPort
+
+The full command looks something like:
+
+```./main -f servers.txt -p 7777```
+
+
+### Notes:
+
+If your backends use JWTs or another stateless session mechanism, you likely don’t need Redis for session routing. The session information is contained in the JWT and sent with every request, so any backend can handle it without sticky sessions.

@@ -71,7 +71,9 @@ The load balancer takes the following flags:
 
 The full command looks something like:
 
-```./main -f servers.txt -p 7777```
+```
+./main -f servers.txt -p 7777
+```
 
 ## 🔮 FUTURE:
 

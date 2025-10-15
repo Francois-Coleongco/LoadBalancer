@@ -37,7 +37,7 @@ A custom-built HTTP load balancer designed with **backend agnosticism**, **sessi
 
 ### Server File:
 
-setup your ports like so in a file:
+Setup your ports like so in a file with a name of your choice:
 
  `servers.txt`
 
@@ -64,8 +64,10 @@ docker exec -it lb_redis_store redis-cli
 
 The load balancer takes the following flags:
 
--f servers.txt
--p loadBalancerPort
+```
+-f your_servers_file.txt
+-p your_load_balancer_port
+```
 
 The full command looks something like:
 

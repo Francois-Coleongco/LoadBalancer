@@ -18,8 +18,8 @@ func TestRobin(t *testing.T) {
 
 	s.TraverseMNodes(10)
 
-	s.DeleteNode("72.72.72.72", 424)
-	s.DeleteNode("69.69.69.69", 421)
+	s.DeleteServer("72.72.72.72", 424)
+	s.DeleteServer("69.69.69.69", 421)
 
 	fmt.Println("TRAVERSING AGAIN")
 
@@ -39,8 +39,8 @@ func TestRobinRemoveAll(t *testing.T) {
 
 	s.TraverseMNodes(10)
 
-	s.DeleteNode("72.72.72.72", 424)
-	s.DeleteNode("69.69.69.69", 421)
+	s.DeleteServer("72.72.72.72", 424)
+	s.DeleteServer("69.69.69.69", 421)
 
 	fmt.Println("TRAVERSING AGAIN")
 
@@ -56,7 +56,7 @@ func TestRobinAddOne(t *testing.T) {
 
 	s.TraverseMNodes(1)
 
-	s.DeleteNode("69.69.69.69", 421)
+	s.DeleteServer("69.69.69.69", 421)
 	fmt.Println(s.Nodes)
 
 	fmt.Println("TRAVERSING AGAIN")

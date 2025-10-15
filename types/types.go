@@ -14,7 +14,7 @@ type Node struct {
 	URL  string
 	PORT uint16
 
-	TotalConnections uint32
+	TotalConnections uint64
 
 	alive bool
 }
@@ -25,7 +25,7 @@ func (n *Node) Available() bool {
 
 type Servers struct {
 	mu    sync.RWMutex
-	Size  uint32
+	Size  uint64
 	Nodes map[string]*Node // map string to node so easy lookup for deletion
 	First *Node            // could use first to add new nodes
 }
@@ -49,6 +49,7 @@ func (s *Servers) AddToFront(url string, port uint16) {
 	n := new(Node)
 	n.URL = url
 	n.PORT = port
+	n.alive = true
 
 	if s.Size == 0 {
 		n.prev = n
@@ -70,7 +71,7 @@ func (s *Servers) AddToFront(url string, port uint16) {
 	s.Size++
 }
 
-func (s *Servers) DeleteNode(url string, port uint16) {
+func (s *Servers) DeleteServer(url string, port uint16) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -97,12 +98,12 @@ func (s *Servers) DeleteNode(url string, port uint16) {
 		s.First = nil
 	}
 
-	delete(s.Nodes, whole)
+	s.Nodes[whole].alive = false // server is dead.
 
 	s.Size--
 }
 
-func (s *Servers) TraverseMNodes(m uint32) {
+func (s *Servers) TraverseMNodes(m uint64) uint64 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -111,16 +112,20 @@ func (s *Servers) TraverseMNodes(m uint32) {
 	}
 
 	if s.Size == 0 {
-		return
+		return 0
 	}
 
 	curr_node := s.First
 
-	for i := uint32(0); i < m; i++ {
+	var sum uint64 = 0
+
+	for i := uint64(0); i < m; i++ {
 		println(curr_node.URL, curr_node.PORT)
+		sum += curr_node.TotalConnections
 		curr_node = curr_node.prev
 	}
 
+	return sum
 }
 
 func (s *Servers) GetServer() (*Node, error) {
@@ -133,10 +138,41 @@ func (s *Servers) GetServer() (*Node, error) {
 	}
 
 	for s.First.Available() == false {
-		s.DeleteNode(s.First.URL, s.First.PORT)
+		s.DeleteServer(s.First.URL, s.First.PORT)
 	}
+
+	ret := s.First
 
 	s.First = s.First.next
 
-	return s.First, nil
+	fmt.Printf("hitting server: %s on port %d\n", ret.URL, ret.PORT)
+
+	return ret, nil
 }
+
+func (s *Servers) GetMean() (uint64, error) {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	// this function might not be needed if i optimize the mean calculation on the fly during addition of connections (GetServer) and deletion of servers (DeleteServer)
+
+	if s.Size == 0 {
+		return 0, fmt.Errorf("couldn't get mean because there are no servers!")
+	}
+
+	all_connections := s.TraverseMNodes(0) // go for the whole length
+
+	mean := all_connections / s.Size
+
+	return mean, nil
+
+}
+
+// func (s *Servers) GetServerStandardDeviation(mean uint64, server_connection_count uint64) {
+//
+// 	s.mu.RLock()
+// 	defer s.mu.RUnlock()
+//
+// 	diff := (server_connection_count - mean)
+// 	(diff * diff) / (s.Size - 1)
+// }

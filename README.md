@@ -1,6 +1,6 @@
 # Thread-Safe HTTP Load Balancer
 
-<img width="2387" height="939" alt="system_design_diagram" src="https://github.com/user-attachments/assets/f8e3d989-c0ac-4eb9-85c7-5ad2778581a2" />
+<img width="2365" height="855" alt="image" src="https://github.com/user-attachments/assets/732589d2-ca7c-4256-9206-71b3189a3eca" />
 
 ## Server Rotation + Redis HTTP Header Storage Demo:
 
@@ -10,7 +10,7 @@ https://github.com/user-attachments/assets/a90ebaea-c2db-4007-9751-1439ab60e0de
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation** for distributed systems.
 
 
-## Feature Checklist
+## Feature list
 
 - **Systems-level concurrency control**
 - **Custom data structures (doubly circular linked list round-robin for server scheduling)**

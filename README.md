@@ -1,4 +1,4 @@
-# 🚦 Thread-Safe HTTP Load Balancer
+# Thread-Safe HTTP Load Balancer
 
 <img width="2387" height="939" alt="system_design_diagram" src="https://github.com/user-attachments/assets/f8e3d989-c0ac-4eb9-85c7-5ad2778581a2" />
 
@@ -20,7 +20,7 @@ A custom-built HTTP load balancer designed with **backend agnosticism**, **sessi
 
 ---
 
-## 🧠 Design Overview
+## Design Overview
 
 ### Load Balancing Strategy
 
@@ -33,7 +33,7 @@ A custom-built HTTP load balancer designed with **backend agnosticism**, **sessi
 
 ---
 
-## 🔧 Environment Configuration & Building
+## Environment Configuration & Building
 
 ### Server File:
 
@@ -52,7 +52,7 @@ http://localhost:8888
 http://localhost:5173
 ```
 
-## 🏎️ Usage
+## Usage
 
 
 Start the Redis store and Redis CLI:
@@ -75,7 +75,7 @@ The full command looks something like:
 ./main -f servers.txt -p 7777
 ```
 
-## 🔮 FUTURE:
+## FUTURE:
 
 I'm hoping to work on a better algorithm than round-robin, perhaps using the standard deviation of each server with the mean of connections to calculate the best server to route to next.
 

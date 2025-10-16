@@ -79,6 +79,6 @@ The full command looks something like:
 
 I'm hoping to work on a better algorithm than round-robin, perhaps using the standard deviation of each server with the mean of connections to calculate the best server to route to next.
 
-### 📝 Notes:
+### Notes:
 
 If your backends use JWTs or another stateless session mechanism, you likely don’t need and probably SHOULD NOT use Redis for session routing. The session information is contained in the JWT and sent with every request, so any backend can handle it without sticky sessions. Using the redis store in this case would be a lapse in security as the JWT would be stored unnecessarily for the duration of the redis (key, value) expiration.

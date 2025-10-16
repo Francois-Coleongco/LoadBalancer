@@ -1,6 +1,7 @@
 # Thread-Safe HTTP Load Balancer
 
-<img width="2365" height="855" alt="image" src="https://github.com/user-attachments/assets/732589d2-ca7c-4256-9206-71b3189a3eca" />
+<img width="2340" height="891" alt="system_design_diagram" src="https://github.com/user-attachments/assets/ccf62cf5-01ee-41f7-8366-508f9f558c23" />
+
 
 ## Server Rotation + Redis HTTP Header Storage Demo:
 

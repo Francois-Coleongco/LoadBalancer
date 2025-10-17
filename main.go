@@ -44,11 +44,11 @@ func main() {
 
 	var lb_port *int = flag.Int("p", 6666, "please enter a valid port 0-65535")
 
+	flag.Parse()
+
 	if *lb_port < 0 || 65535 < *lb_port {
 		log.Println("please provide a valid port 0-65535")
 	}
-
-	flag.Parse()
 
 	s := types.InitServers()
 

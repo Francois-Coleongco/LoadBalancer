@@ -1,24 +1,27 @@
-# 🚦 Thread-Safe HTTP Load Balancer
+# Thread-Safe HTTP Load Balancer
 
-A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation**.
-
-Server Rotation + Redis HTTP Header Storage Demo:
-
-https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
+<img width="2340" height="891" alt="system_design_diagram" src="https://github.com/user-attachments/assets/ccf62cf5-01ee-41f7-8366-508f9f558c23" />
 
 
+## Server Rotation + Redis HTTP Header Storage Demo:
 
-## ✅ Feature Checklist
+https://github.com/user-attachments/assets/a90ebaea-c2db-4007-9751-1439ab60e0de
 
-- ✅ **Systems-level concurrency control**
-- ✅ **Custom data structures (doubly circular linked list round-robin for server scheduling)**
-- ✅ **Cookie-based load balancing strategy**
-- ✅ **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
-- ✅ **Redis-backed distributed session storage**
+
+A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation** for distributed systems.
+
+
+## Feature list
+
+- **Systems-level concurrency control**
+- **Custom data structures (doubly circular linked list round-robin for server scheduling)**
+- **Cookie-based load balancing strategy**
+- **Functional Tests to guarantee thread safety and validated server insertion, deletion, and traversal edge cases (single node, full rotation, and empty state)**
+- **Redis-backed session storage**
 
 ---
 
-## 🧠 Design Overview
+## Design Overview
 
 ### Load Balancing Strategy
 
@@ -35,9 +38,9 @@ https://github.com/user-attachments/assets/96132742-b8ca-4fa6-8886-f9c66e4dd74c
 
 ### Server File:
 
-setup your ports like so in a file:
+Setup your ports like so in a file with a name of your choice:
 
-🔧 `servers.txt`
+ `servers.txt`
 
 ```
 http://localhost:8000
@@ -53,20 +56,30 @@ http://localhost:5173
 ## Usage
 
 
-Start the Redis store:
+Start the Redis store and Redis CLI:
 
-```docker run -d -p 6379:6379 --name lb_redis_store redis```
+```
+docker run -d -p 6379:6379 --name lb_redis_store redis
+docker exec -it lb_redis_store redis-cli
+```
 
 The load balancer takes the following flags:
 
--f servers.txt
--p loadBalancerPort
+```
+-f your_servers_file.txt
+-p your_load_balancer_port
+```
 
 The full command looks something like:
 
-```./main -f servers.txt -p 7777```
+```
+./main -f servers.txt -p 7777
+```
 
+## FUTURE:
+
+I'm hoping to work on a better algorithm than round-robin, perhaps using the standard deviation of each server with the mean of connections to calculate the best server to route to next.
 
 ### Notes:
 
-If your backends use JWTs or another stateless session mechanism, you likely don’t need Redis for session routing. The session information is contained in the JWT and sent with every request, so any backend can handle it without sticky sessions.
+If your backends use JWTs or another stateless session mechanism, you likely don’t need and probably SHOULD NOT use Redis for session routing. The session information is contained in the JWT and sent with every request, so any backend can handle it without sticky sessions. Using the redis store in this case would be a lapse in security as the JWT would be stored unnecessarily for the duration of the redis (key, value) expiration.

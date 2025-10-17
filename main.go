@@ -35,9 +35,10 @@ func main() {
 
 	rds_client := init_redis()
 
-	if rds_client == nil {
-		log.Println("could not start redis client, rds_client == nil")
-		return
+	_, err := rds_client.Ping(ctx).Result()
+
+	if err != nil {
+		log.Fatal("Redis not available")
 	}
 
 	var file_name *string = flag.String("f", "", "please enter your server file after the -f")
@@ -55,7 +56,8 @@ func main() {
 	file, err := os.Open(*file_name)
 
 	if err != nil {
-		log.Println("error opening file with name: ", *file_name)
+		log.Println("error opening server file with name: ", *file_name)
+		return
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -131,13 +133,6 @@ func main() {
 			rds_response, err := rds_client.Set(ctx, tracking.String(), header_str, time.Hour*24).Result() // default to a day
 
 			if err != nil {
-				log.Println("couldn't get response from rds, err not nil")
-			}
-
-			log.Println("rds_response: ", rds_response)
-
-			if err != nil {
-				log.Println("rds err ", err)
 				log.Println("couldn't get response from rds, err not nil")
 			}
 

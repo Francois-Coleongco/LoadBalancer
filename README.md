@@ -3,9 +3,7 @@
 <img width="2340" height="891" alt="system_design_diagram" src="https://github.com/user-attachments/assets/ccf62cf5-01ee-41f7-8366-508f9f558c23" />
 
 
-## Server Rotation + Redis HTTP Header Storage Demo:
-
-https://github.com/user-attachments/assets/a90ebaea-c2db-4007-9751-1439ab60e0de
+## Server Rotation Demo:
 
 
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation** for distributed systems.
@@ -56,7 +54,7 @@ http://localhost:5173
 ## Usage
 
 
-Start the Redis store and Redis CLI:
+Start the Redis store and Redis CLI (this is what your backend will talk to in order to retrieve session data):
 
 ```
 docker run -d -p 6379:6379 --name lb_redis_store redis

@@ -18,28 +18,9 @@ import (
 	"strings"
 
 	"github.com/Francois-Coleongco/LoadBalancer/types"
-	"github.com/redis/go-redis/v9"
 )
 
-func init_redis() *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set NEED TO ADD ONE FROM ENV LATER
-		DB:       0,  // use default DB
-	})
-
-}
-
 func main() {
-	ctx := context.Background()
-
-	rds_client := init_redis()
-
-	_, err := rds_client.Ping(ctx).Result()
-
-	if err != nil {
-		log.Fatal("Redis not available")
-	}
 
 	var file_name *string = flag.String("f", "", "please enter your server file after the -f")
 
@@ -119,26 +100,6 @@ func main() {
 
 			resp.Header.Add("Set-Cookie", tracking.String())
 			log.Println("added set-cookie header")
-			// save cookie value for session in redis
-			var buf bytes.Buffer
-
-			err := resp.Request.Header.Write(&buf)
-
-			if err != nil {
-				log.Println("couldn't write header to buf ", err)
-			}
-
-			header_str := buf.String()
-
-			rds_response, err := rds_client.Set(ctx, tracking.String(), header_str, time.Hour*24).Result() // default to a day
-
-			if err != nil {
-				log.Println("couldn't get response from rds, err not nil")
-			}
-
-			log.Println("rds_response: ", rds_response)
-
-			// should store the LB_Tracker as key and session data as value AS WELL AS the current time to track time of last request to determine a dead or alive connection
 
 			return nil
 

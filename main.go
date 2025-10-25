@@ -2,8 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"context"
 	"crypto"
 	"encoding/hex"
 	"flag"
@@ -17,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Francois-Coleongco/LoadBalancer/healthchecks"
 	"github.com/Francois-Coleongco/LoadBalancer/types"
 )
 
@@ -108,6 +107,17 @@ func main() {
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			log.Printf("Proxy Error: %v\n", err)
 			http.Error(w, "Backend unavailable", http.StatusBadGateway)
+			whole := strings.Split(r.URL.Host, ":")
+			port, err := strconv.Atoi(whole[1])
+			if err != nil {
+				log.Println("malformed port number")
+				return
+			}
+
+			if !healthchecks.CheckServerAlive(r.URL.Host, r) {
+				s.DeleteServer(whole[0], uint16(port))
+			}
+
 		},
 	}
 

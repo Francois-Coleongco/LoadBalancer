@@ -1,9 +1,11 @@
 # Thread-Safe HTTP Load Balancer
 
-<img width="2340" height="891" alt="system_design_diagram" src="https://github.com/user-attachments/assets/ccf62cf5-01ee-41f7-8366-508f9f558c23" />
-
+<img width="2270" height="978" alt="system_design_diagram" src="https://github.com/user-attachments/assets/c98ac8f7-789d-42d2-a738-452c75e59b7a" />
 
 ## Server Rotation Demo:
+
+https://github.com/user-attachments/assets/f8307562-1a2b-4d7f-ad39-388eeb176a89
+
 
 
 A custom-built HTTP load balancer designed with **backend agnosticism**, **session persistence**, and **thread-safe server rotation** for distributed systems.

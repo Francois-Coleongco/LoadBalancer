@@ -78,7 +78,10 @@ The full command looks something like:
 
 ## FUTURE:
 
-I'm hoping to work on a better algorithm than round-robin, perhaps using the standard deviation of each server with the mean of connections to calculate the best server to route to next.
+- Add a go routine to handle repinging and adding back of servers
+
+- Implement dynamic weighted round robin (perhaps as a basis, use static weights first) based off of server capacity and current number of connections
+
 
 ### Notes:
 

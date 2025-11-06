@@ -53,19 +53,21 @@ func main() {
 			continue
 		}
 
-		s.AddToFront(read_in_server, uint16(read_in_port))
+		s.Lives.AddToFront(read_in_server, uint16(read_in_port))
 	}
 
-	if s.Size == 0 {
+	if s.Lives.GetSize() == 0 {
 		log.Println("no servers read in :( how can we possibly balance now! NOOOOOOOOO")
 		return
 	}
+
+	go s.ListenAndAddBack()
 
 	proxy := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 
 			log.Println("Received:", req.Method, req.URL.Path)
-			server, err := s.GetServer()
+			server, err := s.Lives.GetServer()
 			if err != nil {
 				// only reason for GetServer to not work is if there are no servers
 				log.Println("NO SERVERS???? WHAT")

@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"sync"
 )
@@ -15,33 +16,69 @@ type Node struct {
 	PORT uint16
 
 	TotalConnections uint64
-
-	alive bool
 }
 
-func (n *Node) Available() bool {
-	return n.alive
+type ServersList struct {
+	mu    sync.RWMutex
+	Nodes map[string]*Node // map string to node so easy lookup for deletion (funeral time)
+	First *Node
+	Size  uint64
 }
 
 type Servers struct {
-	mu    sync.RWMutex
-	Size  uint64
-	Nodes map[string]*Node // map string to node so easy lookup for deletion
-	First *Node            // could use first to add new nodes
+	Lives ServersList
+	Deads ServersList
 }
 
 func InitServers() *Servers {
 	// will block and doesn't need locking
 	s := new(Servers)
+	s.Lives.Size = 0
+	s.Lives.Nodes = make(map[string]*Node)
+	s.Lives.First = nil
 
-	s.Size = 0
-	s.Nodes = make(map[string]*Node)
-	s.First = nil
+	s.Deads.Size = 0
+	s.Deads.Nodes = make(map[string]*Node)
+	s.Deads.First = nil
 
 	return s
 }
 
-func (s *Servers) AddToFront(url string, port uint16) {
+func (s *ServersList) DeleteServerFromList(whole string) {
+	value, ok := s.Nodes[whole]
+
+	log.Println("removing server: ", whole)
+
+	if !ok {
+		log.Println("could not remove server", whole)
+		return
+	}
+
+	log.Println("got past could not remove server, no deadlock?")
+
+	if value == s.First {
+		s.First = s.First.next
+	}
+
+	if s.Size > 1 { // removes the server from the round robin schedule
+		value.prev.next = value.next
+		value.next.prev = value.prev
+	} else {
+		s.First = nil
+	}
+
+	s.Size--
+
+}
+
+func (s *ServersList) GetSize() uint64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.Size
+}
+
+func (s *ServersList) AddToFront(url string, port uint16) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -49,7 +86,6 @@ func (s *Servers) AddToFront(url string, port uint16) {
 	n := new(Node)
 	n.URL = url
 	n.PORT = port
-	n.alive = true
 
 	if s.Size == 0 {
 		n.prev = n
@@ -72,38 +108,25 @@ func (s *Servers) AddToFront(url string, port uint16) {
 }
 
 func (s *Servers) DeleteServer(url string, port uint16) {
+	{
+		s.Lives.mu.Lock()
+		defer s.Lives.mu.Unlock()
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
+		whole := url + ":" + strconv.Itoa(int(port))
 
-	whole := url + ":" + strconv.Itoa(int(port))
+		s.Lives.DeleteServerFromList(whole)
 
-	value, ok := s.Nodes[whole]
-
-	log.Println("removing server: ", url, port, whole)
-
-	if !ok {
-		log.Println("could not remove server", url, port)
-		return
 	}
 
-	if value == s.First {
-		s.First = s.First.next
-	}
+	// link up s.Nodes[whole] to the DeadNodes
 
-	if s.Size > 1 {
-		value.prev.next = value.next
-		value.next.prev = value.prev
-	} else {
-		s.First = nil
-	}
+	log.Println("starting in DeadNodes")
 
-	s.Nodes[whole].alive = false // server is dead.
+	s.Deads.AddToFront(url, port) // safe to use url and port from the args because server was in Lives for certain, and was deleted as per assumption from the above return
 
-	s.Size--
 }
 
-func (s *Servers) TraverseMNodes(m uint64) uint64 {
+func (s *ServersList) TraverseMNodes(m uint64) uint64 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -128,17 +151,13 @@ func (s *Servers) TraverseMNodes(m uint64) uint64 {
 	return sum
 }
 
-func (s *Servers) GetServer() (*Node, error) {
+func (s *ServersList) GetServer() (*Node, error) {
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	if s.Size == 0 { // no servers in list
 		return nil, fmt.Errorf("Server retrieved was nil")
-	}
-
-	for s.First.Available() == false {
-		s.DeleteServer(s.First.URL, s.First.PORT)
 	}
 
 	ret := s.First
@@ -150,29 +169,27 @@ func (s *Servers) GetServer() (*Node, error) {
 	return ret, nil
 }
 
-func (s *Servers) GetMean() (uint64, error) {
+func (s *Servers) ListenAndAddBack() {
+	for {
+		size := s.Deads.GetSize()
+		for i := uint64(0); i < size; i++ {
+			server, err := s.Deads.GetServer()
+			if err != nil {
+				log.Println("GetServer failed in ListenAndAddBack")
+				continue
+			}
 
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	// this function might not be needed if i optimize the mean calculation on the fly during addition of connections (GetServer) and deletion of servers (DeleteServer)
+			whole := server.URL + ":" + strconv.Itoa(int(server.PORT))
+			_, err = http.Get(whole)
 
-	if s.Size == 0 {
-		return 0, fmt.Errorf("couldn't get mean because there are no servers!")
+			if err == nil {
+				// server is alive
+				s.Lives.AddToFront(server.URL, server.PORT)
+				s.Deads.DeleteServerFromList(whole)
+			}
+
+		}
+
 	}
 
-	all_connections := s.TraverseMNodes(0) // go for the whole length
-
-	mean := all_connections / s.Size
-
-	return mean, nil
-
 }
-
-// func (s *Servers) GetServerStandardDeviation(mean uint64, server_connection_count uint64) {
-//
-// 	s.mu.RLock()
-// 	defer s.mu.RUnlock()
-//
-// 	diff := (server_connection_count - mean)
-// 	(diff * diff) / (s.Size - 1)
-// }

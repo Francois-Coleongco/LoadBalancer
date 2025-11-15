@@ -76,6 +76,19 @@ The full command looks something like:
 ./main -f servers.txt -p 7777
 ```
 
+
+### For minikube (kubernetes) deployment
+
+```
+eval $(minikube docker-env)
+docker build -t my-loadbalancer:latest .
+kubectl apply -f loadbalancer.yaml
+kubectl get pods
+minikube service loadbalancer-service
+```
+All 3 replicas should eventually be running.
+
+
 ## FUTURE:
 
 - Add a go routine to handle repinging and adding back of servers

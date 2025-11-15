@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lb-config
+data:
+  servers.txt: |
+    server1:8081
+    server2:8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadbalancer
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: loadbalancer
+  template:
+    metadata:
+      labels:
+        app: loadbalancer
+    spec:
+      containers:
+      - name: loadbalancer
+        image: my-loadbalancer:latest
+        imagePullPolicy: Never
+        args: ["-f", "/config/servers.txt", "-p", "8080"]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: lb-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer-service
+spec:
+  type: NodePort
+  selector:
+    app: loadbalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
